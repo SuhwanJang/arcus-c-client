@@ -182,7 +182,7 @@ memcached_return_t memcached_key_test(const memcached_st& memc,
 #endif
 
 LIBMEMCACHED_LOCAL
-memcached_return_t memcached_purge(memcached_server_write_instance_st ptr);
+bool memcached_purge(memcached_server_write_instance_st ptr);
 
 
 static inline memcached_return_t memcached_validate_key_length(size_t key_length, bool binary)

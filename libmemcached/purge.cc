@@ -1,8 +1,7 @@
 #include "common.h"
 
-memcached_return_t memcached_purge(memcached_server_write_instance_st ptr)
+bool memcached_purge(memcached_server_write_instance_st ptr)
 {
-  memcached_return_t ret= MEMCACHED_SUCCESS;
   memcached_st *root= (memcached_st *)ptr->root;
 
   if (memcached_is_purging(ptr->root) || /* already purging */
@@ -11,7 +10,7 @@ memcached_return_t memcached_purge(memcached_server_write_instance_st ptr)
       (ptr->io_bytes_sent >= ptr->root->io_bytes_watermark &&
        memcached_server_response_count(ptr) < 2))
   {
-    return MEMCACHED_SUCCESS;
+    return true;
   }
 
   /* memcached_io_write and memcached_response may call memcached_purge
@@ -23,12 +22,13 @@ memcached_return_t memcached_purge(memcached_server_write_instance_st ptr)
     requests buffered up.. */
   if (memcached_io_write(ptr, NULL, 0, true) == -1)
   {
-    memcached_set_purging(root, true);
-
-    return memcached_set_error(*ptr, MEMCACHED_WRITE_FAILURE, MEMCACHED_AT);
+    memcached_set_purging(root, false);
+    memcached_set_error(*ptr, MEMCACHED_WRITE_FAILURE, MEMCACHED_AT);
+    return false;
   }
   WATCHPOINT_ASSERT(ptr->fd != -1);
 
+  bool is_successful= true;
   uint32_t no_msg= memcached_server_response_count(ptr) - 1;
   if (no_msg > 0)
   {
@@ -58,11 +58,13 @@ memcached_return_t memcached_purge(memcached_server_write_instance_st ptr)
        * The only kind of errors I care about if is I'm out of sync with the
        * protocol or have problems reading data from the network..
        */
-      if (rc == MEMCACHED_PROTOCOL_ERROR || rc == MEMCACHED_UNKNOWN_READ_FAILURE)
+      if (rc == MEMCACHED_PROTOCOL_ERROR or rc == MEMCACHED_UNKNOWN_READ_FAILURE
+          or rc == MEMCACHED_READ_FAILURE)
       {
         WATCHPOINT_ERROR(rc);
-        ret= rc;
         memcached_set_error(*ptr, rc, MEMCACHED_AT);
+        memcached_io_reset(ptr);
+        is_successful= false;
       }
 
       if (ptr->root->callbacks != NULL)
@@ -85,5 +87,5 @@ memcached_return_t memcached_purge(memcached_server_write_instance_st ptr)
   }
   memcached_set_purging(root, false);
 
-  return ret;
+  return is_successful;
 }
