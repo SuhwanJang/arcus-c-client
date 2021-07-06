@@ -267,7 +267,11 @@ memcached_return_t memcached_sasl_authenticate_connection(memcached_server_st *s
   /* Release resources */
   sasl_dispose(&conn);
 
-  return memcached_set_error(*server, rc, MEMCACHED_AT);
+  if (rc != MEMCACHED_ERRNO)
+  {
+    memcached_set_error(*server, rc, MEMCACHED_AT);
+  }
+  return rc;
 }
 
 static int get_username(void *context, int id, const char **result, unsigned int *len)

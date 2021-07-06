@@ -258,13 +258,16 @@ memcached_return_t memcached_fetch_execute(memcached_st *ptr,
 
   while ((result= memcached_fetch_result(ptr, result, &rc)))
   {
-    if (memcached_failed(rc) and rc == MEMCACHED_NOTFOUND)
+    if (rc == MEMCACHED_NOTFOUND)
     {
       continue;
     }
     else if (memcached_failed(rc))
     {
-      memcached_set_error(*ptr, rc, MEMCACHED_AT);
+      if (rc != MEMCACHED_ERRNO)
+      {
+        memcached_set_error(*ptr, rc, MEMCACHED_AT);
+      }
       some_errors= true;
       continue;
     }
@@ -275,7 +278,10 @@ memcached_return_t memcached_fetch_execute(memcached_st *ptr,
       if (memcached_failed(ret))
       {
         some_errors= true;
-        memcached_set_error(*ptr, ret, MEMCACHED_AT);
+        if (rc != MEMCACHED_ERRNO)
+        {
+          memcached_set_error(*ptr, ret, MEMCACHED_AT);
+        }
         break;
       }
     }

@@ -132,7 +132,11 @@ do_action:
       goto do_action;
     }
 #endif
-    return memcached_set_error(*instance, rc, MEMCACHED_AT);
+    if (rc != MEMCACHED_ERRNO)
+    {
+      memcached_set_error(*instance, rc, MEMCACHED_AT);
+    }
+    return rc;
   }
 
   /*
@@ -217,7 +221,7 @@ do_action:
   if (memcached_failed(rc= memcached_vdo(instance, vector, 3, true)))
   {
     memcached_io_reset(instance);
-    return (rc == MEMCACHED_SUCCESS) ? MEMCACHED_WRITE_FAILURE : rc;
+    return rc;
   }
 
   if (no_reply)

@@ -1641,7 +1641,10 @@ static memcached_return_t do_coll_get(memcached_st *ptr,
   rc= memcached_connect(instance);
   if (memcached_failed(rc))
   {
-    memcached_set_error(*instance, rc, MEMCACHED_AT);
+    if (rc != MEMCACHED_ERRNO)
+    {
+      memcached_set_error(*instance, rc, MEMCACHED_AT);
+    }
     return rc;
   }
 

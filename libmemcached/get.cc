@@ -202,7 +202,10 @@ static memcached_return_t ascii_get_by_key(memcached_st *ptr,
   if (memcached_failed(rc))
   {
     memcached_io_reset(instance);
-    memcached_set_error(*ptr, rc, MEMCACHED_AT);
+    if (rc != MEMCACHED_ERRNO)
+    {
+      memcached_set_error(*ptr, rc, MEMCACHED_AT);
+    }
   }
   return rc;
 }

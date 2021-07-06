@@ -82,7 +82,10 @@ static inline memcached_return_t memcached_version_textual(memcached_st *ptr)
     if (memcached_failed(rrc))
     {
       errors_happened= true;
-      (void)memcached_set_error(*instance, rrc, MEMCACHED_AT);
+      if (rrc != MEMCACHED_ERRNO)
+      {
+        (void)memcached_set_error(*instance, rrc, MEMCACHED_AT);
+      }
       memcached_io_reset(instance);
       continue;
     }

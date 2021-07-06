@@ -662,7 +662,10 @@ memcached_return_t memcached_connect(memcached_server_write_instance_st server)
   }
   else
   {
-    memcached_set_error(*server, rc, MEMCACHED_AT);
+    if (rc != MEMCACHED_ERRNO)
+    {
+      memcached_set_error(*server, rc, MEMCACHED_AT);
+    }
     memcached_mark_server_for_timeout(server);
   }
 
